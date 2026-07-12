@@ -33,7 +33,7 @@ jobs:
       - name: Typecheck & build
         run: pnpm build
       - name: Hadolint
-        uses: hadolint/hadolint-action@v3
+        uses: hadolint/hadolint-action@v3.3.0
         with:
           dockerfile: Dockerfile
 
