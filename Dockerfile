@@ -1,4 +1,4 @@
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 ENV CI=true
 RUN npm install -g pnpm@10
 WORKDIR /app
