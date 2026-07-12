@@ -1,0 +1,30 @@
+:8080 {
+	header {
+		-Server
+		-X-Powered-By
+		-Last-Modified
+		-ETag
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+		Cross-Origin-Opener-Policy same-origin
+		Permissions-Policy "interest-cohort=()"
+	}
+
+	@cfg path /c
+	handle @cfg {
+		header Content-Type text/plain
+		header Cache-Control no-store
+		respond "{$ALLOWED_DOMAIN:}" 200
+	}
+
+	handle {
+		root * /srv
+		encode zstd gzip
+		file_server
+		try_files {path} /index.html
+
+		@assets path *.js *.css
+		header @assets Cache-Control "public, max-age=86400"
+		header Cache-Control "no-cache"
+	}
+}

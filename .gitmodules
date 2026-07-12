@@ -1,0 +1,3 @@
+[submodule "creepjs"]
+	path = creepjs
+	url = https://github.com/abrahamjuliot/creepjs.git

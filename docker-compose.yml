@@ -1,0 +1,9 @@
+services:
+  fp-web:
+    image: ghcr.io/xsaveopt/fp-web:latest
+    container_name: fp-web
+    restart: unless-stopped
+    environment:
+      ALLOWED_DOMAIN: ''
+    ports:
+      - '8080:8080'

@@ -1,0 +1,30 @@
+{
+  "name": "fp-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc -b && vite build",
+    "typecheck": "vue-tsc -b",
+    "preview": "vite preview",
+    "lint": "oxlint",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt --check ."
+  },
+  "dependencies": {
+    "vue": "^3.5.39"
+  },
+  "devDependencies": {
+    "@types/node": "^26.0.1",
+    "@vitejs/plugin-vue": "^6.0.7",
+    "javascript-obfuscator": "^5.4.3",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0",
+    "terser": "^5.48.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.1.0",
+    "vite-plugin-singlefile": "^2.3.3",
+    "vue-tsc": "^3.3.5"
+  }
+}

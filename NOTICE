@@ -1,0 +1,9 @@
+This project bundles a build of CreepJS:
+
+CreepJS — https://github.com/abrahamjuliot/creepjs
+Copyright (c) 2021 abrahamjuliot
+MIT License
+
+CreepJS is vendored as the git submodule at creepjs/ and distributed under the
+MIT License. Its full license text lives in creepjs/LICENSE and is bundled into
+the built application.
