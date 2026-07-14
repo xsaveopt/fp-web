@@ -1,8 +1,8 @@
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 ENV CI=true
-RUN npm install -g pnpm@10
 WORKDIR /app
 COPY . .
+RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
 RUN pnpm -C creepjs install --frozen-lockfile && pnpm -C creepjs build:js
 RUN pnpm install --frozen-lockfile && pnpm build
 
