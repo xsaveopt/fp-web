@@ -19,10 +19,18 @@ jobs:
       - uses: actions/checkout@v7
         with:
           submodules: recursive
-      - uses: pnpm/setup@v1
+      - uses: actions/setup-node@v6
         with:
-          runtime: node@26
-          cache: true
+          node-version: 26
+      - name: Install pnpm
+        run: npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
+      - name: Configure pnpm store cache
+        run: echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+      - uses: actions/cache@v6
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Format check
