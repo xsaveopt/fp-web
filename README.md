@@ -52,7 +52,7 @@ CreepJS lives in a submodule, so clone with it or initialise it after cloning.
 git submodule update --init
 ```
 
-Tooling is Node 24 and pnpm 10, which [mise](https://mise.jdx.dev) will pin with `mise use node@24 pnpm@10`.
+Tooling is Node 26 and pnpm 11, which [mise](https://mise.jdx.dev) will pin with `mise use node@26 pnpm@11`.
 The CreepJS bundle has to be built once; Vite then imports it straight out of `creepjs/`, so there is no copy step.
 
 ```bash
