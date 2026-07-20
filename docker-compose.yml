@@ -5,6 +5,11 @@ services:
     restart: unless-stopped
     environment:
       ALLOWED_DOMAIN: ''
+      POW_SECRET: 'change-me-to-a-long-random-string'
+      POW_DIFFICULTY: '16'
+      POW_TTL: '30m'
+      RL_EVENTS: '120'
+      RL_WINDOW: '1m'
     ports:
       - '8080:8080'
     read_only: true

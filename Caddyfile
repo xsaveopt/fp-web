@@ -1,4 +1,17 @@
+{
+	servers {
+		trusted_proxies static private_ranges
+	}
+	order powgate before file_server
+	order rate_limit before powgate
+}
+
 :8080 {
+	log {
+		output stdout
+		format json
+	}
+
 	header {
 		-Server
 		-X-Powered-By
@@ -10,6 +23,36 @@
 		Permissions-Policy "interest-cohort=()"
 	}
 
+	@nosecfetch not header Sec-Fetch-Mode *
+	handle @nosecfetch {
+		abort
+	}
+
+	@nolang not header Accept-Language *
+	handle @nolang {
+		abort
+	}
+
+	@noenc not header Accept-Encoding *
+	handle @noenc {
+		abort
+	}
+
+	@nomozilla not header_regexp User-Agent "(?i)mozilla/5\.0"
+	handle @nomozilla {
+		abort
+	}
+
+	@badtool header_regexp User-Agent "(?i)(curl|wget|python|libwww|http[-_]?client|go-http|okhttp|java/|apache-http|scrapy|httpx|aiohttp|axios|node-fetch|got/|reqwest|guzzle|postman|insomnia|headless|phantom|puppeteer|playwright|selenium|\\bbot\\b|spider|crawl)"
+	handle @badtool {
+		abort
+	}
+
+	@honeypot path_regexp "(?i)(^/\.env|^/\.git|^/\.aws|^/wp-|xmlrpc|phpmyadmin|^/admin|^/vendor|^/config\.json)"
+	handle @honeypot {
+		abort
+	}
+
 	@cfg path /c
 	handle @cfg {
 		header Content-Type text/plain
@@ -18,6 +61,20 @@
 	}
 
 	handle {
+		rate_limit {
+			zone perip {
+				key {http.request.client_ip}
+				events {$RL_EVENTS:120}
+				window {$RL_WINDOW:1m}
+			}
+		}
+
+		powgate {
+			secret {$POW_SECRET}
+			difficulty {$POW_DIFFICULTY:16}
+			ttl {$POW_TTL:30m}
+		}
+
 		root * /srv
 		encode zstd gzip
 		file_server
