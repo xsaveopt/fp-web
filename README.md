@@ -51,9 +51,9 @@ services:
     container_name: fp-web
     restart: unless-stopped
     environment:
-      POW_SECRET: "change-me-to-a-long-random-string"
+      POW_SECRET: 'change-me-to-a-long-random-string'
     ports:
-      - "8080:8080"
+      - '8080:8080'
     read_only: true
     tmpfs:
       - /config
