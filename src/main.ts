@@ -1,5 +1,6 @@
 import { createApp } from 'vue'
 import App from './App.vue'
+import '98.css'
 import './style.css'
 import { installTraps } from './lib/fingerprint'
 import { installGuard, enforceDomain } from './lib/guard'

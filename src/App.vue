@@ -42,13 +42,25 @@ onMounted(async () => {
 
 <template>
   <main>
-    <p class="fp" :class="state">
-      <template v-if="state === 'ready'">{{ hash }}</template>
-      <template v-else-if="state === 'error'"
-        >unavailable<br /><small>{{ diag }}</small></template
-      >
-      <template v-else>…</template>
-    </p>
+    <div class="window">
+      <div class="title-bar" :class="{ inactive: state !== 'ready' }">
+        <div class="title-bar-text">fingerprint.exe</div>
+        <div class="title-bar-controls">
+          <button aria-label="Minimize"></button>
+          <button aria-label="Maximize"></button>
+          <button aria-label="Close"></button>
+        </div>
+      </div>
+      <div class="window-body">
+        <p class="fp" :class="state">
+          <template v-if="state === 'ready'">{{ hash }}</template>
+          <template v-else-if="state === 'error'"
+            >unavailable<br /><small>{{ diag }}</small></template
+          >
+          <template v-else>computing…</template>
+        </p>
+      </div>
+    </div>
   </main>
   <footer hidden><a :href="licenseUrl">license</a></footer>
 </template>

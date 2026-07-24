@@ -55,6 +55,17 @@ const harden = async (code: string, opts: HardenOpts) => {
   return out ?? obfuscated
 }
 
+function patch98css(): Plugin {
+  return {
+    name: 'patch-98css',
+    enforce: 'pre',
+    transform(code, id) {
+      if (!id.includes('98.css')) return null
+      return code.replace('@media (not(hover))', '@media (hover: none)')
+    },
+  }
+}
+
 function creepjs(): Plugin {
   return {
     name: 'creepjs',
@@ -96,7 +107,7 @@ function creepjs(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [vue(), creepjs(), viteSingleFile()],
+  plugins: [patch98css(), vue(), creepjs(), viteSingleFile()],
   build: {
     sourcemap: false,
     minify: 'terser',
