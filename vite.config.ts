@@ -7,7 +7,25 @@ import { minify } from 'terser'
 import JavaScriptObfuscator from 'javascript-obfuscator'
 
 const creepSource = fileURLToPath(new URL('./creepjs/docs/creep.js', import.meta.url))
+const ddtSource = fileURLToPath(
+  new URL('./node_modules/disable-devtool/disable-devtool.min.js', import.meta.url),
+)
 const asset = 'm.js'
+
+const ddtInit =
+  "(function(){var D=DisableDevtool.DetectorType;DisableDevtool({url:'about:blank',disableMenu:true,clearLog:true,detectors:[D.RegToString,D.DefineId,D.Size,D.DateToString,D.FuncToString,D.Performance,D.DebugLib]});})();"
+
+function antidebug(): Plugin {
+  return {
+    name: 'antidebug',
+    transformIndexHtml() {
+      return [
+        { tag: 'script', children: readFileSync(ddtSource, 'utf8'), injectTo: 'head' },
+        { tag: 'script', children: ddtInit, injectTo: 'head' },
+      ]
+    },
+  }
+}
 
 const loadCreep = () =>
   readFileSync(creepSource, 'utf8')
@@ -40,7 +58,7 @@ const obfuscate = (code: string, { heavy, debug, selfDefending, domainLock }: Ha
     selfDefending,
     domainLock,
     domainLockRedirectUrl: 'about:blank',
-    disableConsoleOutput: true,
+    disableConsoleOutput: false,
     unicodeEscapeSequence: false,
   }).getObfuscatedCode()
 
@@ -55,15 +73,24 @@ const harden = async (code: string, opts: HardenOpts) => {
   return out ?? obfuscated
 }
 
-function patch98css(): Plugin {
-  return {
-    name: 'patch-98css',
-    enforce: 'pre',
-    transform(code, id) {
-      if (!id.includes('98.css')) return null
-      return code.replace('@media (not(hover))', '@media (hover: none)')
-    },
+let creepBundle: Promise<string> | null = null
+const buildCreep = () => {
+  if (!creepBundle) {
+    creepBundle = (async () => {
+      const { code } = await minify(loadCreep(), {
+        compress: { drop_console: true, drop_debugger: true, passes: 2 },
+        mangle: true,
+        format: { comments: false },
+      })
+      return harden(code ?? loadCreep(), {
+        heavy: true,
+        debug: false,
+        selfDefending: false,
+        domainLock: [],
+      })
+    })()
   }
+  return creepBundle
 }
 
 function creepjs(): Plugin {
@@ -75,28 +102,20 @@ function creepjs(): Plugin {
         res.end(loadCreep())
       })
     },
+    transformIndexHtml: {
+      order: 'post',
+      async handler(html, ctx) {
+        if (ctx.server) return html
+        const b64 = Buffer.from(await buildCreep(), 'utf8').toString('base64')
+        return html.replace('</body>', `<script type="text/plain" id="m">${b64}</script></body>`)
+      },
+    },
     async generateBundle(_options, bundle) {
-      const { code } = await minify(loadCreep(), {
-        compress: { drop_console: true, drop_debugger: true, passes: 2 },
-        mangle: true,
-        format: { comments: false },
-      })
-      this.emitFile({
-        type: 'asset',
-        fileName: asset,
-        source: await harden(code ?? loadCreep(), {
-          heavy: true,
-          debug: false,
-          selfDefending: false,
-          domainLock: [],
-        }),
-      })
-
       for (const chunk of Object.values(bundle)) {
         if (chunk.type === 'chunk') {
           chunk.code = await harden(chunk.code, {
             heavy: true,
-            debug: true,
+            debug: false,
             selfDefending: true,
             domainLock: [],
           })
@@ -106,8 +125,72 @@ function creepjs(): Plugin {
   }
 }
 
+const MANGLE_SEED = 'fp-web'
+const MANGLE_CLASSES = [
+  'title-bar-controls',
+  'title-bar-text',
+  'title-bar',
+  'window-body',
+  'window',
+  'inactive',
+  'loading',
+  'error',
+  'ready',
+  'fp',
+]
+
+const mangleName = (value: string) => {
+  let h = 2166136261
+  for (const ch of value + MANGLE_SEED) {
+    h ^= ch.charCodeAt(0)
+    h = Math.imul(h, 16777619)
+  }
+  return '_' + (h >>> 0).toString(36)
+}
+
+const classMap = new Map(MANGLE_CLASSES.map((c) => [c, mangleName(c)]))
+const escapeRe = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+const classSelectorRe = new RegExp(
+  '\\.(' + MANGLE_CLASSES.map(escapeRe).join('|') + ')(?![\\w-])',
+  'g',
+)
+
+function mangle(): Plugin {
+  return {
+    name: 'mangle-dom',
+    enforce: 'pre',
+    transform(code, id) {
+      if (id.endsWith('.css')) {
+        return code.replace(classSelectorRe, (_m, t: string) => '.' + classMap.get(t))
+      }
+      if (id.endsWith('.vue')) {
+        return code
+          .replace(
+            /(?<!:)class="([^"]*)"/g,
+            (_m, value: string) =>
+              'class="' +
+              value
+                .split(/\s+/)
+                .map((t) => classMap.get(t) ?? t)
+                .join(' ') +
+              '"',
+          )
+          .replace(
+            /(\{\s*)inactive(\s*:)/g,
+            (_m, a: string, b: string) => a + classMap.get('inactive') + b,
+          )
+          .replace(
+            /(['"])(loading|ready|error)\1/g,
+            (_m, q: string, t: string) => q + classMap.get(t) + q,
+          )
+      }
+      return null
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [patch98css(), vue(), creepjs(), viteSingleFile()],
+  plugins: [mangle(), vue(), creepjs(), antidebug(), viteSingleFile()],
   build: {
     sourcemap: false,
     minify: 'terser',

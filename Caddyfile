@@ -18,6 +18,7 @@
 		-Last-Modified
 		-ETag
 		X-Content-Type-Options nosniff
+		X-Robots-Tag noindex
 		Referrer-Policy no-referrer
 		Cross-Origin-Opener-Policy same-origin
 		Permissions-Policy "interest-cohort=()"
@@ -51,6 +52,11 @@
 	@honeypot path_regexp "(?i)(^/\.env|^/\.git|^/\.aws|^/wp-|xmlrpc|phpmyadmin|^/admin|^/vendor|^/config\.json)"
 	handle @honeypot {
 		abort
+	}
+
+	@favicon path /favicon.ico
+	handle @favicon {
+		respond 204
 	}
 
 	@cfg path /c

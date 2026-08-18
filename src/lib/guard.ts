@@ -16,18 +16,3 @@ export async function enforceDomain(): Promise<void> {
     return
   }
 }
-
-export function installGuard(): void {
-  const probe = new Function('debugger')
-  let strikes = 0
-  const check = () => {
-    let open = false
-    if (outerWidth - innerWidth > 220 || outerHeight - innerHeight > 220) open = true
-    const start = performance.now()
-    probe()
-    if (performance.now() - start > 200) open = true
-    strikes = open ? strikes + 1 : 0
-    if (strikes >= 3) wipe()
-  }
-  setInterval(check, 2000)
-}

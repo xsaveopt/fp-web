@@ -3,7 +3,7 @@ ENV CI=true
 WORKDIR /app
 COPY . .
 RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
-RUN pnpm -C creepjs install --frozen-lockfile && pnpm -C creepjs build:js
+RUN pnpm -C creepjs install --frozen-lockfile --ignore-workspace && pnpm -C creepjs build:js
 RUN pnpm install --frozen-lockfile && pnpm build
 
 FROM caddy:2-builder-alpine AS caddybuilder

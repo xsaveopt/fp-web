@@ -1,0 +1,2 @@
+patchedDependencies:
+  98.css@0.1.21: patches/98.css@0.1.21.patch

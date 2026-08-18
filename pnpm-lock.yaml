@@ -4,13 +4,19 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  98.css@0.1.21: 9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152
+
 importers:
 
   .:
     dependencies:
       98.css:
         specifier: 0.1.21
-        version: 0.1.21
+        version: 0.1.21(patch_hash=9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152)
+      disable-devtool:
+        specifier: ^0.3.9
+        version: 0.3.9
       vue:
         specifier: ^3.5.41
         version: 3.5.41(typescript@6.0.3)
@@ -652,6 +658,9 @@ packages:
     resolution: {integrity: sha512-Btj2BOOO83o3WyH59e8MgXsxEQVcarkUOpEYrubB0urwnN10yQ364rsiByU11nZlqWYZm05i/of7io4mzihBtQ==}
     engines: {node: '>=8'}
 
+  disable-devtool@0.3.9:
+    resolution: {integrity: sha512-WHCpC8f93Cn2DnTeaq57NFLcdw4921sovh1ammnp/2o8Snb704HK/Vw1/D2D1Pihc0zc8/mVKb5nchHtoadObQ==}
+
   dunder-proto@1.0.1:
     resolution: {integrity: sha512-KIN/nDJBQRcXw0MLVhZE9iQHmG68qAVIBg9CqmUYjmQIhgij9U5MFvrqkUL5FbtyyzZuOeOt0zdeRe4UY7ct+A==}
     engines: {node: '>= 0.4'}
@@ -1253,7 +1262,7 @@ packages:
 
 snapshots:
 
-  98.css@0.1.21: {}
+  98.css@0.1.21(patch_hash=9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152): {}
 
   '@babel/helper-string-parser@7.29.7': {}
 
@@ -1720,6 +1729,8 @@ snapshots:
       object-keys: 1.1.1
 
   detect-libc@2.1.2: {}
+
+  disable-devtool@0.3.9: {}
 
   dunder-proto@1.0.1:
     dependencies:
