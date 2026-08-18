@@ -13,7 +13,25 @@ const ddtSource = fileURLToPath(
 const asset = 'm.js'
 
 const ddtInit =
-  "(function(){var D=DisableDevtool.DetectorType;DisableDevtool({url:'about:blank',disableMenu:true,clearLog:true,detectors:[D.RegToString,D.DefineId,D.Size,D.DateToString,D.FuncToString,D.Performance,D.DebugLib]});})();"
+  "(function(){var D=DisableDevtool.DetectorType;DisableDevtool({url:'about:blank',interval:50,disableMenu:true,clearLog:true,detectors:[D.RegToString,D.DefineId,D.Size,D.DateToString,D.FuncToString,D.Performance,D.DebugLib]});})();"
+
+const obfuscateInit = () =>
+  JavaScriptObfuscator.obfuscate(ddtInit, {
+    compact: true,
+    identifierNamesGenerator: 'hexadecimal',
+    renameGlobals: false,
+    stringArray: true,
+    stringArrayThreshold: 1,
+    stringArrayEncoding: ['base64'],
+    stringArrayRotate: true,
+    stringArrayShuffle: true,
+    splitStrings: true,
+    splitStringsChunkLength: 6,
+    transformObjectKeys: true,
+    numbersToExpressions: true,
+    simplify: true,
+    unicodeEscapeSequence: false,
+  }).getObfuscatedCode()
 
 function antidebug(): Plugin {
   return {
@@ -21,7 +39,7 @@ function antidebug(): Plugin {
     transformIndexHtml() {
       return [
         { tag: 'script', children: readFileSync(ddtSource, 'utf8'), injectTo: 'head' },
-        { tag: 'script', children: ddtInit, injectTo: 'head' },
+        { tag: 'script', children: obfuscateInit(), injectTo: 'head' },
       ]
     },
   }
