@@ -8,6 +8,7 @@
     "build": "vue-tsc -b && vite build",
     "typecheck": "vue-tsc -b",
     "preview": "vite preview",
+    "test": "node --test 'test/**/*.test.ts'",
     "lint": "oxlint",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check ."

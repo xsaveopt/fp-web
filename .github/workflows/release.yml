@@ -39,10 +39,39 @@ jobs:
         run: pnpm lint
       - name: Typecheck & build
         run: pnpm build
+      - name: Test
+        run: pnpm test
       - name: Hadolint
         uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
+
+  powgate:
+    name: Caddy module
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: caddy/powgate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: caddy/powgate/go.mod
+          cache-dependency-path: caddy/powgate/go.sum
+      - name: Gofmt
+        run: |
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then
+            echo "$out"
+            echo "::error::gofmt found issues; run 'gofmt -w .'"
+            exit 1
+          fi
+      - name: Vet
+        run: go vet ./...
+      - name: Test
+        run: go test ./...
+      - name: Build
+        run: go build ./...
 
   docker:
     name: Docker build (no push)
