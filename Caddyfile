@@ -66,7 +66,7 @@
 		respond "{$ALLOWED_DOMAIN:}" 200
 	}
 
-	handle {
+	handle / {
 		rate_limit {
 			zone perip {
 				key {http.request.client_ip}
@@ -84,10 +84,11 @@
 		root * /srv
 		encode zstd gzip
 		file_server
-		try_files {path} /index.html
 
-		@assets path *.js *.css
-		header @assets Cache-Control "public, max-age=86400"
 		header Cache-Control "no-cache"
+	}
+
+	handle {
+		respond 404
 	}
 }
