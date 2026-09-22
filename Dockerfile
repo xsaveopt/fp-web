@@ -17,3 +17,5 @@ COPY --from=caddybuilder /usr/bin/caddy /usr/bin/caddy
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=webbuilder /app/dist /srv
 EXPOSE 8080
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+	CMD ["curl", "-fsS", "http://127.0.0.1:8080/health"]

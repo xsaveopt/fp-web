@@ -24,6 +24,24 @@
 		Permissions-Policy "interest-cohort=()"
 	}
 
+	@health path /health
+	handle @health {
+		@siteok file {
+			root /srv
+			try_files index.html
+		}
+		handle @siteok {
+			header Content-Type text/plain
+			header Cache-Control no-store
+			respond "up" 200
+		}
+		handle {
+			header Content-Type text/plain
+			header Cache-Control no-store
+			respond "degraded" 503
+		}
+	}
+
 	@nosecfetch not header Sec-Fetch-Mode *
 	handle @nosecfetch {
 		abort
