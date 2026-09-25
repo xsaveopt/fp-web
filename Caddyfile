@@ -6,12 +6,7 @@
 	order rate_limit before powgate
 }
 
-:8080 {
-	log {
-		output stdout
-		format json
-	}
-
+(basehdrs) {
 	header {
 		-Server
 		-X-Powered-By
@@ -23,6 +18,15 @@
 		Cross-Origin-Opener-Policy same-origin
 		Permissions-Policy "interest-cohort=()"
 	}
+}
+
+:8080 {
+	log {
+		output stdout
+		format json
+	}
+
+	import basehdrs
 
 	@health path /health
 	handle @health {
@@ -44,32 +48,37 @@
 
 	@nosecfetch not header Sec-Fetch-Mode *
 	handle @nosecfetch {
-		abort
+		respond 404
 	}
 
 	@nolang not header Accept-Language *
 	handle @nolang {
-		abort
+		respond 404
 	}
 
 	@noenc not header Accept-Encoding *
 	handle @noenc {
-		abort
+		respond 404
 	}
 
 	@nomozilla not header_regexp User-Agent "(?i)mozilla/5\.0"
 	handle @nomozilla {
-		abort
+		respond 404
 	}
 
 	@badtool header_regexp User-Agent "(?i)(curl|wget|python|libwww|http[-_]?client|go-http|okhttp|java/|apache-http|scrapy|httpx|aiohttp|axios|node-fetch|got/|reqwest|guzzle|postman|insomnia|headless|phantom|puppeteer|playwright|selenium|\\bbot\\b|spider|crawl)"
 	handle @badtool {
-		abort
+		respond 404
 	}
 
-	@honeypot path_regexp "(?i)(^/\.env|^/\.git|^/\.aws|^/wp-|xmlrpc|phpmyadmin|^/admin|^/vendor|^/config\.json)"
-	handle @honeypot {
-		abort
+	@conditional expression `{header.If-Modified-Since} != "" || {header.If-None-Match} != "" || {header.If-Match} != "" || {header.If-Unmodified-Since} != "" || {header.If-Range} != ""`
+	handle @conditional {
+		respond 404
+	}
+
+	@nonget not method GET HEAD
+	handle @nonget {
+		respond 404
 	}
 
 	@favicon path /favicon.ico
@@ -107,6 +116,13 @@
 	}
 
 	handle {
+		respond 404
+	}
+
+	handle_errors 429 {
+		import basehdrs
+		header -Cache-Control
+		header -Retry-After
 		respond 404
 	}
 }
