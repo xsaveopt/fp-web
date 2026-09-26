@@ -96,14 +96,14 @@
 	handle / {
 		rate_limit {
 			zone perip {
-				key {http.request.client_ip}
+				key {client_ip}
 				events {$RL_EVENTS:120}
 				window {$RL_WINDOW:1m}
 			}
 		}
 
 		powgate {
-			secret {$POW_SECRET}
+			secret "{$POW_SECRET}"
 			difficulty {$POW_DIFFICULTY:16}
 			ttl {$POW_TTL:30m}
 		}

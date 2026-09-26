@@ -139,13 +139,13 @@ func replaceCounted(t *testing.T, src, old, repl string, want int) string {
 	return strings.ReplaceAll(src, old, repl)
 }
 
-func startSite(t *testing.T) *site {
+func startSite(t *testing.T, secret string) *site {
 	t.Helper()
 	home := t.TempDir()
 	t.Setenv("HOME", home)
 	t.Setenv("XDG_DATA_HOME", filepath.Join(home, "data"))
 	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, "config"))
-	t.Setenv("POW_SECRET", siteSecret)
+	t.Setenv("POW_SECRET", secret)
 	t.Setenv("POW_DIFFICULTY", "4")
 	t.Setenv("POW_TTL", "5m")
 	t.Setenv("RL_EVENTS", strconv.Itoa(siteEvents))
@@ -203,7 +203,7 @@ func startSite(t *testing.T) *site {
 		}
 	})
 
-	gate := &PowGate{Secret: siteSecret, Difficulty: 4, TTL: caddy.Duration(5 * time.Minute)}
+	gate := &PowGate{Secret: secret, Difficulty: 4, TTL: caddy.Duration(5 * time.Minute)}
 	if err := gate.Provision(caddy.Context{}); err != nil {
 		t.Fatalf("provision: %v", err)
 	}
@@ -319,7 +319,7 @@ func expectChallenge(t *testing.T, r response) {
 }
 
 func TestCaddyfile(t *testing.T) {
-	s := startSite(t)
+	s := startSite(t, siteSecret)
 
 	t.Run("health reports up when the site is built", func(t *testing.T) {
 		r := s.do(t, http.MethodGet, "/health", nil)
@@ -533,18 +533,16 @@ func TestCaddyfile(t *testing.T) {
 
 	t.Run("rate limit turns into a bare 404 on the root only", func(t *testing.T) {
 		h := browserHeaders("10.0.9.1")
-		var limited *response
-		for range siteEvents + 1 {
+		for i := range siteEvents {
 			r := s.do(t, http.MethodGet, "/", h)
-			if r.status == http.StatusNotFound {
-				limited = &r
-				break
+			if r.status != http.StatusOK {
+				t.Fatalf("request %d of %d from a fresh client got status %d, the bucket is not per client", i+1, siteEvents, r.status)
 			}
 			expectChallenge(t, r)
 		}
-		if limited == nil {
-			t.Fatalf("no request was limited after %d events", siteEvents+1)
-		}
+		r := s.do(t, http.MethodGet, "/", h)
+		expectStatus(t, r, http.StatusNotFound)
+		limited := &r
 		if challengeParams.FindStringSubmatch(limited.body) != nil {
 			t.Fatal("a limited client still got the challenge")
 		}
@@ -565,5 +563,26 @@ func TestCaddyfile(t *testing.T) {
 		}
 		expectStatus(t, s.do(t, http.MethodGet, "/favicon.ico", h), http.StatusNoContent)
 		expectStatus(t, s.do(t, http.MethodGet, "/health", nil), http.StatusOK)
+
+		expectChallenge(t, s.do(t, http.MethodGet, "/", browserHeaders("10.0.9.2")))
 	})
+}
+
+func TestCaddyfileSecretWithSpaces(t *testing.T) {
+	secret := "a secret  with spaces"
+	s := startSite(t, secret)
+
+	h := with(browserHeaders("10.0.0.1"), "Cookie", s.cookie(t))
+	r := s.do(t, http.MethodGet, "/", h)
+	expectStatus(t, r, http.StatusOK)
+	if !strings.Contains(r.body, indexMarker) {
+		t.Fatalf("a cookie signed with the full secret did not serve the index: %q", r.body)
+	}
+
+	partial := &PowGate{Secret: "a", Difficulty: 4, TTL: caddy.Duration(5 * time.Minute)}
+	if err := partial.Provision(caddy.Context{}); err != nil {
+		t.Fatalf("provision: %v", err)
+	}
+	h = with(browserHeaders("10.0.0.2"), "Cookie", partial.Cookie+"="+token(t, partial, "0123456789abcdef", time.Now()))
+	expectChallenge(t, s.do(t, http.MethodGet, "/", h))
 }
