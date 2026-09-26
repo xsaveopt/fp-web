@@ -66,7 +66,7 @@
 		respond 404
 	}
 
-	@badtool header_regexp User-Agent "(?i)(curl|wget|python|libwww|http[-_]?client|go-http|okhttp|java/|apache-http|scrapy|httpx|aiohttp|axios|node-fetch|got/|reqwest|guzzle|postman|insomnia|headless|phantom|puppeteer|playwright|selenium|\\bbot\\b|spider|crawl)"
+	@badtool header_regexp User-Agent "(?i)(curl|wget|python|libwww|http[-_]?client|go-http|okhttp|java/|apache-http|scrapy|httpx|aiohttp|axios|node-fetch|got/|reqwest|guzzle|postman|insomnia|headless|phantom|puppeteer|playwright|selenium|\bbot\b|spider|crawl)"
 	handle @badtool {
 		respond 404
 	}

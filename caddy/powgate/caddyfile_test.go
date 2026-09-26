@@ -465,6 +465,8 @@ func TestCaddyfile(t *testing.T) {
 			"Mozilla/5.0 Selenium",
 			"Mozilla/5.0 (compatible; Baiduspider/2.0)",
 			"Mozilla/5.0 (compatible; CCBot crawler)",
+			"Mozilla/5.0 (compatible; bot)",
+			"Mozilla/5.0 (X11; Linux x86_64) bot/1.0",
 			"MOZILLA/5.0 CURL/8.9.1",
 		}
 		for _, ua := range agents {
