@@ -144,18 +144,7 @@ function creepjs(): Plugin {
 }
 
 const MANGLE_SEED = 'fp-web'
-const MANGLE_CLASSES = [
-  'title-bar-controls',
-  'title-bar-text',
-  'title-bar',
-  'window-body',
-  'window',
-  'inactive',
-  'loading',
-  'error',
-  'ready',
-  'fp',
-]
+const MANGLE_CLASSES = ['loading', 'error', 'ready', 'diag', 'fp']
 
 const mangleName = (value: string) => {
   let h = 2166136261
@@ -192,10 +181,6 @@ function mangle(): Plugin {
                 .map((t) => classMap.get(t) ?? t)
                 .join(' ') +
               '"',
-          )
-          .replace(
-            /(\{\s*)inactive(\s*:)/g,
-            (_m, a: string, b: string) => a + classMap.get('inactive') + b,
           )
           .replace(
             /(['"])(loading|ready|error)\1/g,

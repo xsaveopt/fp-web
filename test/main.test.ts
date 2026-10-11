@@ -22,7 +22,7 @@ const stubSources: Record<string, string> = {
 const stubFor = (source: string): string | null => {
   if (source === 'vue') return 'vue'
   if (source === './App.vue') return 'app'
-  if (source === '98.css' || source === './style.css') return 'css'
+  if (source === './style.css') return 'css'
   if (source === './lib/fingerprint') return 'fingerprint'
   if (source === './lib/guard') return 'guard'
   return null

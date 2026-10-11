@@ -54,18 +54,7 @@ const mangled = (cls: string): string => {
   return match[1] as string
 }
 
-const classes = [
-  'title-bar-controls',
-  'title-bar-text',
-  'title-bar',
-  'window-body',
-  'window',
-  'inactive',
-  'loading',
-  'error',
-  'ready',
-  'fp',
-]
+const classes = ['loading', 'error', 'ready', 'diag', 'fp']
 
 describe('plugin order', () => {
   it('runs mangle first and the singlefile inliner after the custom plugins', () => {
@@ -90,45 +79,37 @@ describe('mangleName', () => {
   })
 
   it('is stable across calls', () => {
-    assert.equal(mangled('window'), mangled('window'))
+    assert.equal(mangled('fp'), mangled('fp'))
   })
 })
 
 describe('mangle transform on css', () => {
   it('renames whole class selectors only', () => {
-    const out = transform(
-      '.window .title-bar-text,.title-bar{} .windows{} .window-body{} .fp:hover{} .error-x{}',
-      '/src/style.css',
-    )
+    const out = transform('.fp .diag,.ready{} .fps{} .fp:hover{} .error-x{}', '/src/style.css')
     assert.equal(
       out,
-      `.${referenceName('window')} .${referenceName('title-bar-text')},.${referenceName('title-bar')}{} .windows{} .${referenceName('window-body')}{} .${referenceName('fp')}:hover{} .error-x{}`,
+      `.${referenceName('fp')} .${referenceName('diag')},.${referenceName('ready')}{} .fps{} .${referenceName('fp')}:hover{} .error-x{}`,
     )
   })
 
   it('leaves unknown classes and non-selector text alone', () => {
-    const css = '.other{color:red} #window{} window{}'
+    const css = '.other{color:red} #fp{} fp{}'
     assert.equal(transform(css, '/src/x.css'), css)
   })
 })
 
 describe('mangle transform on vue', () => {
   it('rewrites static class attributes token by token', () => {
-    const out = transform('<div class="title-bar  custom fp"></div>', '/src/App.vue')
+    const out = transform('<pre class="fp  custom loading"></pre>', '/src/App.vue')
     assert.equal(
       out,
-      `<div class="${referenceName('title-bar')} custom ${referenceName('fp')}"></div>`,
+      `<pre class="${referenceName('fp')} custom ${referenceName('loading')}"></pre>`,
     )
   })
 
   it('skips bound class attributes', () => {
     const src = '<p :class="fp"></p>'
     assert.equal(transform(src, '/src/App.vue'), src)
-  })
-
-  it('rewrites the inactive object key', () => {
-    const out = transform(':class="{ inactive: state }"', '/src/App.vue')
-    assert.equal(out, `:class="{ ${referenceName('inactive')}: state }"`)
   })
 
   it('rewrites quoted state literals with either quote style', () => {
@@ -145,8 +126,8 @@ describe('mangle transform on vue', () => {
 
 describe('mangle transform on other files', () => {
   it('returns null for ts and html', () => {
-    assert.equal(transform('.window', '/src/main.ts'), null)
-    assert.equal(transform('<div class="window"></div>', '/index.html'), null)
+    assert.equal(transform('.fp', '/src/main.ts'), null)
+    assert.equal(transform('<div class="fp"></div>', '/index.html'), null)
   })
 })
 

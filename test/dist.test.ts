@@ -17,18 +17,7 @@ const mangleName = (value: string): string => {
   return '_' + (h >>> 0).toString(36)
 }
 
-const classes = [
-  'title-bar-controls',
-  'title-bar-text',
-  'title-bar',
-  'window-body',
-  'window',
-  'inactive',
-  'loading',
-  'error',
-  'ready',
-  'fp',
-]
+const classes = ['loading', 'error', 'ready', 'diag', 'fp']
 
 const html = built ? readFileSync(distPath, 'utf8') : ''
 const payloadRe = /<script type="text\/plain" id="m">([A-Za-z0-9+/=]+)<\/script>\s*<\/body>/
@@ -83,17 +72,7 @@ describe('built dist/index.html', { skip: built ? false : 'run pnpm build first'
       const original = new RegExp('\\.' + cls.replace(/-/g, '\\-') + '(?![\\w-])')
       assert.doesNotMatch(styles, original, `.${cls} survived the build`)
     }
-    for (const cls of [
-      'window',
-      'title-bar',
-      'title-bar-text',
-      'title-bar-controls',
-      'window-body',
-      'inactive',
-      'fp',
-      'loading',
-      'error',
-    ]) {
+    for (const cls of classes) {
       assert.ok(styles.includes('.' + mangleName(cls)), `.${cls} has no mangled rule`)
     }
   })

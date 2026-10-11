@@ -25,8 +25,14 @@ const appPath = fileURLToPath(new URL('../src/App.vue', import.meta.url))
 const root = fileURLToPath(new URL('..', import.meta.url))
 const entryId = '\0app-entry'
 const fingerprintId = '\0fingerprint-stub'
+const artId = '\0art-stub'
 
 let pending: Pending | null = null
+let terminal: { played: Node[]; sizes: unknown[]; finished: string[] } = {
+  played: [],
+  sizes: [],
+  finished: [],
+}
 
 const stubs = (): Plugin => ({
   name: 'app-test-stubs',
@@ -34,6 +40,7 @@ const stubs = (): Plugin => ({
   resolveId(source, importer) {
     if (source === 'app-entry') return entryId
     if (source === './lib/fingerprint' && importer?.startsWith(appPath)) return fingerprintId
+    if (source === './lib/art' && importer?.startsWith(appPath)) return artId
     return null
   },
   load(id) {
@@ -42,6 +49,9 @@ const stubs = (): Plugin => ({
     }
     if (id === fingerprintId) {
       return 'export const computeFingerprint = () => globalThis.__appTestFingerprint()'
+    }
+    if (id === artId) {
+      return `export const runConsole = (el, size) => globalThis.__appTestConsole(el, size)\nexport const measure = () => ({ cols: 60, rows: 20 })\nexport const watchSize = () => {}`
     }
     return null
   },
@@ -173,12 +183,13 @@ const mount = async (harness: Harness): Promise<Page> => {
   const tree = element('#root')
   renderer.createApp(harness.App).mount(tree)
   await harness.nextTick()
+  await settle()
   return { tree, placeholder }
 }
 
 const fp = (tree: Node): Node | undefined => byClass(tree, 'fp')
 
-const titleBar = (tree: Node): Node | undefined => byClass(tree, 'title-bar')
+const diag = (tree: Node): Node | undefined => byClass(tree, 'diag')
 
 const answer = (settleWith: (p: Pending) => void): void => {
   assert.ok(pending, 'computeFingerprint was not called')
@@ -187,6 +198,20 @@ const answer = (settleWith: (p: Pending) => void): void => {
 
 const install = (): void => {
   pending = null
+  terminal = { played: [], sizes: [], finished: [] }
+  Reflect.defineProperty(globalThis, '__appTestConsole', {
+    value: (el: Node, size: unknown) => {
+      terminal.played.push(el)
+      terminal.sizes.push(size)
+      return {
+        finish: (text: string) => {
+          terminal.finished.push(text)
+        },
+      }
+    },
+    configurable: true,
+    writable: true,
+  })
   Reflect.defineProperty(globalThis, '__appTestFingerprint', {
     value: () =>
       new Promise<string>((resolve, reject) => {
@@ -209,31 +234,35 @@ describe('App in production mode', () => {
     harness = await compile('production')
   })
 
-  it('shows the loading state while the fingerprint is computed', async () => {
+  it('starts the console in the screen while the fingerprint is computed', async () => {
     install()
     const { tree, placeholder } = await mount(harness)
 
-    assert.equal(textOf(fp(tree) as Node), 'computing…')
-    assert.ok(classesOf(fp(tree)).includes('loading'))
-    assert.ok(classesOf(titleBar(tree)).includes('inactive'))
+    const frame = fp(tree)
+    assert.equal(frame?.tag, 'pre')
+    assert.deepEqual(classesOf(frame), ['fp', 'loading'])
+    assert.deepEqual(terminal.played, [frame])
+    assert.deepEqual(terminal.sizes, [{ cols: 60, rows: 20 }])
+    assert.deepEqual(terminal.finished, [])
     assert.equal(placeholder.removed, 0)
     assert.ok(pending, 'computeFingerprint was not called on mount')
   })
 
-  it('shows the hash once the fingerprint resolves', async () => {
+  it('hands the hash to the console once the fingerprint resolves', async () => {
     install()
     const { tree, placeholder } = await mount(harness)
 
     answer((p) => p.resolve('a'.repeat(64)))
     await settle()
 
-    assert.equal(textOf(fp(tree) as Node), 'a'.repeat(64))
+    assert.deepEqual(terminal.finished, ['a'.repeat(64)])
     assert.deepEqual(classesOf(fp(tree)), ['fp', 'ready'])
-    assert.ok(!classesOf(titleBar(tree)).includes('inactive'))
+    assert.deepEqual(terminal.played, [fp(tree)])
+    assert.equal(diag(tree), undefined)
     assert.equal(placeholder.removed, 1)
   })
 
-  it('shows unavailable without diagnostics when the fingerprint fails', async () => {
+  it('tells the console it is unavailable without diagnostics when the fingerprint fails', async () => {
     install()
     const fetchMock = mock.method(globalThis, 'fetch', async () => new Response(''))
     const { tree, placeholder } = await mount(harness)
@@ -241,9 +270,9 @@ describe('App in production mode', () => {
     answer((p) => p.reject(new Error('timeout')))
     await settle()
 
-    assert.equal(textOf(fp(tree) as Node), 'unavailable')
+    assert.deepEqual(terminal.finished, ['unavailable'])
     assert.deepEqual(classesOf(fp(tree)), ['fp', 'error'])
-    assert.ok(classesOf(titleBar(tree)).includes('inactive'))
+    assert.equal(diag(tree), undefined)
     assert.equal(fetchMock.mock.callCount(), 0)
     assert.equal(placeholder.removed, 1)
   })
@@ -282,10 +311,9 @@ describe('App in development mode', () => {
     answer((p) => p.reject(new Error('timeout')))
     await settle()
 
-    const text = textOf(fp(tree) as Node)
-    assert.ok(text.startsWith('unavailable'))
+    assert.deepEqual(terminal.finished, ['unavailable'])
     assert.equal(
-      text.slice('unavailable'.length),
+      textOf(diag(tree) as Node),
       [
         'err: timeout',
         'secureContext: true',
@@ -310,8 +338,8 @@ describe('App in development mode', () => {
     answer((p) => p.reject('boom'))
     await settle()
 
-    const text = textOf(fp(tree) as Node)
-    assert.match(text, /^unavailableerr: boom \| /)
+    const text = textOf(diag(tree) as Node)
+    assert.match(text, /^err: boom \| /)
     assert.match(text, / \| probe:offline$/)
     assert.equal(placeholder.removed, 1)
   })
@@ -324,7 +352,8 @@ describe('App in development mode', () => {
     answer((p) => p.resolve('b'.repeat(64)))
     await settle()
 
-    assert.equal(textOf(fp(tree) as Node), 'b'.repeat(64))
+    assert.deepEqual(terminal.finished, ['b'.repeat(64)])
+    assert.equal(diag(tree), undefined)
     assert.equal(fetchMock.mock.callCount(), 0)
   })
 })

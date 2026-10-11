@@ -1,21 +1,31 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { computeFingerprint } from './lib/fingerprint'
+import { measure, runConsole, watchSize } from './lib/art'
+import type { Size } from './lib/art'
 import licenseText from '../creepjs/LICENSE?raw'
 
 type State = 'loading' | 'ready' | 'error'
 
 const state = ref<State>('loading')
-const hash = ref('')
 const diag = ref('')
+const screen = ref<HTMLElement | null>(null)
+const art = ref<HTMLElement | null>(null)
+const size = reactive<Size>({ cols: 80, rows: 25 })
 
 const licenseUrl = URL.createObjectURL(new Blob([licenseText], { type: 'text/plain' }))
 
 onMounted(async () => {
+  if (screen.value) {
+    Object.assign(size, measure(screen.value))
+    watchSize(screen.value, size)
+  }
+  const terminal = art.value ? runConsole(art.value, size) : null
   try {
-    hash.value = await computeFingerprint()
+    terminal?.finish(await computeFingerprint())
     state.value = 'ready'
   } catch (e) {
+    terminal?.finish('unavailable')
     state.value = 'error'
     if (import.meta.env.DEV) {
       const w = window as unknown as { Creep?: unknown; __w?: string }
@@ -43,26 +53,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <main>
-    <div class="window">
-      <div class="title-bar" :class="{ inactive: state !== 'ready' }">
-        <div class="title-bar-text">fingerprint.exe</div>
-        <div class="title-bar-controls">
-          <button aria-label="Minimize"></button>
-          <button aria-label="Maximize"></button>
-          <button aria-label="Close"></button>
-        </div>
-      </div>
-      <div class="window-body">
-        <p class="fp" :class="state">
-          <template v-if="state === 'ready'">{{ hash }}</template>
-          <template v-else-if="state === 'error'"
-            >unavailable<br /><small>{{ diag }}</small></template
-          >
-          <template v-else>computing…</template>
-        </p>
-      </div>
-    </div>
+  <main ref="screen">
+    <pre ref="art" class="fp" :class="state"></pre>
+    <small v-if="diag" class="diag">{{ diag }}</small>
   </main>
   <footer hidden><a :href="licenseUrl">license</a></footer>
 </template>
