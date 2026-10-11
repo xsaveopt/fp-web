@@ -1,2 +1,2 @@
-patchedDependencies:
-  98.css@0.1.21: patches/98.css@0.1.21.patch
+allowBuilds:
+  ascii.rest@https://codeload.github.com/bas3line/ascii/tar.gz/4b101f40a47245e97b430d2abdc05ce4beef35b2: true

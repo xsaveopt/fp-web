@@ -4,16 +4,13 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
-patchedDependencies:
-  98.css@0.1.21: 9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152
-
 importers:
 
   .:
     dependencies:
-      98.css:
-        specifier: 0.1.21
-        version: 0.1.21(patch_hash=9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152)
+      ascii.rest:
+        specifier: github:bas3line/ascii#4b101f40a47245e97b430d2abdc05ce4beef35b2
+        version: https://codeload.github.com/bas3line/ascii/tar.gz/4b101f40a47245e97b430d2abdc05ce4beef35b2
       disable-devtool:
         specifier: ^0.3.9
         version: 0.3.9
@@ -53,9 +50,6 @@ importers:
         version: 3.3.11(typescript@6.0.3)
 
 packages:
-
-  98.css@0.1.21:
-    resolution: {integrity: sha512-ddk5qtUWyapM0Bzd5jwGExoE5fdSEGrP+F5VbYjyZLf2c9UVmn6w2NPTvCsoD4BWdGsjdLjlkQGhWwWTJcYQJQ==}
 
   '@babel/helper-string-parser@7.29.7':
     resolution: {integrity: sha512-Pb5ijPrZ89GDH8223L4UP8i6QApWxs04RbPQJTeWDV0/keR2E36MeKnyr6LYmUUvqRRI+Iv87SuF1W6ErINzYw==}
@@ -581,6 +575,15 @@ packages:
   arrify@2.0.1:
     resolution: {integrity: sha512-3duEwti880xqi4eAMN8AyR4a0ByT90zoYdLlevfrvU43vb0YZwZVfxOgxWrLXXXpyugL0hNZc9G6BiB5B3nUug==}
     engines: {node: '>=8'}
+
+  ascii.rest@https://codeload.github.com/bas3line/ascii/tar.gz/4b101f40a47245e97b430d2abdc05ce4beef35b2:
+    resolution: {gitHosted: true, integrity: sha512-sLZuCSMRQ7qHwv+74K3gdVTPBDdYC5T3WKj/z5IjiFWFPY/6IlbTDugr9ZqPRfaPCn3dof+qIRKeVJoZLVxRJA==, tarball: https://codeload.github.com/bas3line/ascii/tar.gz/4b101f40a47245e97b430d2abdc05ce4beef35b2}
+    version: 0.1.0
+    peerDependencies:
+      react: '>=18'
+    peerDependenciesMeta:
+      react:
+        optional: true
 
   assert@2.1.0:
     resolution: {integrity: sha512-eLHpSK/Y4nhMJ07gDaAzoX/XAKS8PSaojml3M0DM4JpV1LAi5JOJ/p6H/XWrl8L+DzVEvVCW1z3vWAaB9oTsQw==}
@@ -1284,8 +1287,6 @@ packages:
 
 snapshots:
 
-  98.css@0.1.21(patch_hash=9a9ed11d7c0759c64104ea27567f6829dc1670b3676534bee69031d4f9763152): {}
-
   '@babel/helper-string-parser@7.29.7': {}
 
   '@babel/helper-validator-identifier@7.29.7': {}
@@ -1670,6 +1671,8 @@ snapshots:
   array-union@2.1.0: {}
 
   arrify@2.0.1: {}
+
+  ascii.rest@https://codeload.github.com/bas3line/ascii/tar.gz/4b101f40a47245e97b430d2abdc05ce4beef35b2: {}
 
   assert@2.1.0:
     dependencies:
