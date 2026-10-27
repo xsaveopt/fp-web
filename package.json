@@ -14,7 +14,7 @@
     "format:check": "oxfmt --check ."
   },
   "dependencies": {
-    "ascii.rest": "github:bas3line/ascii#4b101f40a47245e97b430d2abdc05ce4beef35b2",
+    "ascii.rest": "^0.4.0",
     "disable-devtool": "^0.3.9",
     "vue": "^3.5.43"
   },
